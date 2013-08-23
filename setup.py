@@ -35,15 +35,9 @@ setuptools.setup(
             "Topic :: Software Development :: Libraries",
             "Topic :: Utilities",
     ],
-
+    py_modules=['sc2bnet'],
     entry_points={
-        'console_scripts': [
-            'sc2bnet = sc2bnet:main',
-        ]
+        'console_scripts': ['sc2bnet = sc2bnet:main']
     },
-
     install_requires=['argparse','unittest2','requests']  if float(sys.version[:3]) < 2.7 else ['requests'],
-    packages=setuptools.find_packages(),
-    include_package_data=True,
-    zip_safe=True
 )

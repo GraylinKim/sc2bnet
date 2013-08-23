@@ -775,9 +775,3 @@ public_key = os.getenv('SC2BNET_PUBLIC_KEY')
 private_key = os.getenv('SC2BNET_PRIVATE_KEY')
 cache = FileCache(cache_dir) if cache_dir else NoCache()
 set_factory(SC2BnetFactory(locale, public_key, private_key, cache))
-
-
-if __name__ == '__main__':
-    sc2bnet = SC2BnetFactory(cache=FileCache('local_cache', cache_types=['data']))
-    profile = sc2bnet.load_profile('us',2358439, 1, 'ShadesofGray')
-    profile.current_season.rankings[0].ladder.load_details()
