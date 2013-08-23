@@ -1,0 +1,10 @@
+*~
+*.pyc
+dist
+build
+sc2bnet.egg-info
+replay_profile
+PKG-INFO.txt
+sc2reader/bin
+sc2reader/include
+sc2reader/lib
