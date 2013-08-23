@@ -13,4 +13,5 @@ import sc2bnet
 class TestReplays(unittest.TestCase):
 
 	def test_basic(self):
-		pass
+		profile = sc2bnet.load_profile('us', 2358439, 1, 'ShadesofGray')
+		profile.current_season.rankings[0].ladder.load_details()
