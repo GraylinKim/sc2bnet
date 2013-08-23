@@ -66,6 +66,10 @@ class NoCache(object):
     def __setitem__(self, key, value):
         pass
 
+    def __contains__(self, key):
+        return False
+
+
 class FileCache(object):
     def __init__(self, cache_path, cache_types=None):
         self.cache_types = cache_types or ['data']
