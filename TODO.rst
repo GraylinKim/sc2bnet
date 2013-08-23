@@ -29,8 +29,6 @@ Project Tasks
 -----------------
 
 * Add tests!
-* Hook up travis-ci.
-* Hook up coveralls.io.
 * Set up the issue tracker.
 * Create new mailing list.
 * Add contributing instructions.
