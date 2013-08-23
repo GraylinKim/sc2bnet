@@ -11,7 +11,6 @@ Library Tasks
 * Add support for grandmaster
 * Add Achievement Categories
 * Finalize support for signed requests (waiting on keys from Blizzard)
-* Implement module level interface
 * Add support for unranked teams (maybe)
 * Add some sort of logging (maybe)
 * Extract icons from compound images (maybe)

@@ -9,6 +9,8 @@ import itertools
 import json
 import os
 import requests
+import sys
+
 
 HOST_BY_REGION = dict(
     us='us.battle.net',
@@ -116,14 +118,21 @@ class SC2BnetFactory(object):
     :param cache_dir: The path to a pre-existing writable folder to cache responses in.
     """
     def __init__(self, preferred_locale=None, public_key=None, private_key=None, cache=None):
-        self.preferred_locale = preferred_locale or 'en_US'
-        self.public_key = public_key
-        self.private_key = private_key
-        self.cache = cache or NoCache()
+        self.cache = NoCache()
+        self.preferred_locale = 'en_US'
+        self.configure(preferred_locale, public_key, private_key, cache)
 
         self.__icon = dict()
         self.__reward = dict()
         self.__achievement = dict()
+
+    def configure(self, preferred_locale=None, public_key=None, private_key=None, cache=None):
+        self.public_key = public_key
+        self.private_key = private_key
+        if cache is not None:
+            self.cache = cache
+        if preferred_locale is not None:
+            self.preferred_locale = preferred_locale
 
     def load_profile(self, region, bnet_id, realm, name):
         """Load a new :class:`PlayerProfile` using the given options. Profiles are not cached."""
@@ -747,6 +756,26 @@ def get_profile(args, factory):
 
 def get_ladder(args, factory):
     ladder = factory.load_ladder(args.region, args.id)
+
+
+def set_factory(factory):
+    module = sys.modules[__name__]
+    module.achievement = factory.achievement
+    module.reward = factory.reward
+    module.icon = factory.icon
+    module.configure = factory.configure
+    module.load_data = factory.load_data
+    module.load_ladder = factory.load_ladder
+    module.load_profile = factory.load_profile
+
+
+locale = os.getenv('SC2BNET_LOCALE')
+cache_dir = os.getenv('SC2READER_CACHE_DIR')
+public_key = os.getenv('SC2BNET_PUBLIC_KEY')
+private_key = os.getenv('SC2BNET_PRIVATE_KEY')
+cache = FileCache(cache_dir) if cache_dir else NoCache()
+set_factory(SC2BnetFactory(locale, public_key, private_key, cache))
+
 
 if __name__ == '__main__':
     sc2bnet = SC2BnetFactory(cache=FileCache('local_cache', cache_types=['data']))
