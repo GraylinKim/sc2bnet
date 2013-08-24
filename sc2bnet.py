@@ -211,8 +211,8 @@ class SC2BnetFactory(object):
         headers = dict()
         if self.private_key and self.public_key:
             now = datetime.utcnow().strftime('%a, %d %b, %Y %H:%M:%S GMT')
-            request_key = "GET\n{0}\n{1}\n".format(now, path)
-            signature = base64.b64encode(hmac.new(self.private_key, request_key, hashlib.sha1))
+            request_key = "GET\n{0}\n{1}\n".format(now, path).encode('utf8')
+            signature = base64.b64encode(hmac.new(self.private_key.encode('utf8'), request_key, hashlib.sha1).digest())
             headers['Authorization'] = "BNET {0}:{1}".format(self.public_key, signature)
 
         # Fetch new data, throwing any http errors upwards
