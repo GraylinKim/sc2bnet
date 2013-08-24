@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import base64
-import datetime
+from datetime import datetime
 import hashlib
 import hmac
 import itertools
@@ -609,7 +609,7 @@ class Match(object):
         self.speed = data['speed']
 
         #: The date the match was played (in UTC?)
-        self.end_time = datetime.datetime.fromtimestamp(data['date'])
+        self.end_time = datetime.fromtimestamp(data['date'])
 
 
 class LadderRanking(object):
@@ -639,7 +639,7 @@ class LadderRanking(object):
         #: The time the team joined the ladder. None if not available
         self.join_time = None
         if 'joinTimestamp' in data:
-            self.join_time = datetime.datetime.fromtimestamp(data['joinTimestamp'])
+            self.join_time = datetime.fromtimestamp(data['joinTimestamp'])
 
         #: A reference to the :class:`Team` object that this ranking is for
         self.team = team
