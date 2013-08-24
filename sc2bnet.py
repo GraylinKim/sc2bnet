@@ -708,7 +708,7 @@ class Icon(object):
         self.url = data['url']
 
 
-def main():
+def main(args=None):
     import argparse
     parser = argparse.ArgumentParser(description="Client for querying the battle.net API")
     parser.add_argument("region")
@@ -737,7 +737,7 @@ def main():
     ladders_command.add_argument("id")
     ladders_command.add_argument("--last", action="store_true", default=False, help="Only valid for grandmaster ladder rankings")
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if args.cache_path is not None:
         types = args.cache_types.lower().split(",") if args.cache_types else None
@@ -746,7 +746,6 @@ def main():
         cache = NoCache()
 
     factory = SC2BnetFactory(args.locale, args.public_key, args.private_key, cache)
-
     args.func(args, factory)
 
 
