@@ -4,6 +4,7 @@ Things to do
 Library Tasks
 ---------------
 
+* Enable retry on HTTP500 errors.
 * See if match.type can be parsed for more info
 * Verify that match.datetime is the end of the game in UTC
 * Add support for ladder/last
@@ -28,8 +29,7 @@ Command Line Tasks
 Project Tasks
 -----------------
 
-* Add tests!
-* Set up the issue tracker.
+* Remove remote requests from tests.
 * Create new mailing list.
 * Add contributing instructions.
 
