@@ -769,7 +769,7 @@ def set_factory(factory):
 
 
 locale = os.getenv('SC2BNET_LOCALE')
-cache_dir = os.getenv('SC2READER_CACHE_DIR')
+cache_dir = os.getenv('SC2BNET_CACHE_DIR')
 public_key = os.getenv('SC2BNET_PUBLIC_KEY')
 private_key = os.getenv('SC2BNET_PRIVATE_KEY')
 cache = FileCache(cache_dir) if cache_dir else NoCache()
