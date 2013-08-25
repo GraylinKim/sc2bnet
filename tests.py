@@ -8,6 +8,10 @@ if sys.version_info[:2] < (2, 7):
 else:
     import unittest
 
+import os
+os.environ['SC2BNET_CACHE_DIR'] = 'test_cache'
+os.environ['SC2BNET_CACHE_TYPES'] = 'data,profile,ladder'
+
 import requests
 import sc2bnet
 
@@ -40,13 +44,13 @@ class Tests(unittest.TestCase):
 
         # reset the file cache directory each time. FileCache must
         # require that the directory exists.
-        shutil.rmtree('test_cache', ignore_errors=True)
+        shutil.rmtree('test_filecache', ignore_errors=True)
         with self.assertRaises(ValueError):
-            cache = sc2bnet.FileCache('test_cache')
-        os.makedirs('test_cache')
+            cache = sc2bnet.FileCache('test_filecache')
+        os.makedirs('test_filecache')
 
         # Configure to use the test_cache directory and cache ladders
-        cache = sc2bnet.FileCache('test_cache', cache_types=['data', 'ladder'])
+        cache = sc2bnet.FileCache('test_filecache', cache_types=['data', 'ladder'])
         value = dict(hello='world')
 
         # KeyError should be raised for bad keys
@@ -67,6 +71,9 @@ class Tests(unittest.TestCase):
         cache[key2] = value
         self.assertFalse(key2 in cache)
 
+        # clean up
+        shutil.rmtree('test_filecache', ignore_errors=True)
+
     @unittest.expectedFailure
     def test_sc2bnet_error(self):
         """ This should be giving an authentication error, instead getting 500 response."""
@@ -76,7 +83,7 @@ class Tests(unittest.TestCase):
 
 
     def test_script(self):
-        sc2bnet.main("us profile 2358439 1 ShadesofGray".split())
+        sc2bnet.main("us --cache-path test_cache --cache-types data,ladder,profile profile 2358439 1 ShadesofGray".split())
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,11 +6,10 @@ python:
  - 3.3
  - pypy
 install:
- - python setup.py install
+ - python setup.py develop
  - pip install coveralls
- - mkdir local_cache
 script:
- - SC2BNET_CACHE_DIR=local_cache coverage run --source=sc2bnet.py tests.py
+ - coverage run --source=sc2bnet.py tests.py
 after_success:
  - coveralls
 branches:
