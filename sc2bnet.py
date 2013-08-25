@@ -768,9 +768,12 @@ def set_factory(factory):
     module.load_profile = factory.load_profile
 
 
-locale = os.getenv('SC2BNET_LOCALE')
-cache_dir = os.getenv('SC2BNET_CACHE_DIR')
-public_key = os.getenv('SC2BNET_PUBLIC_KEY')
-private_key = os.getenv('SC2BNET_PRIVATE_KEY')
-cache = FileCache(cache_dir) if cache_dir else NoCache()
+locale = os.getenv('SC2BNET_LOCALE', None)
+public_key = os.getenv('SC2BNET_PUBLIC_KEY', None)
+private_key = os.getenv('SC2BNET_PRIVATE_KEY', None)
+cache_dir = os.getenv('SC2BNET_CACHE_DIR', None)
+cache_types = os.getenv('SC2BNET_CACHE_TYPES', None)
+if cache_types is not None:
+    cache_types = cache_types.split(",")
+cache = FileCache(cache_dir, cache_types=cache_types) if cache_dir else NoCache()
 set_factory(SC2BnetFactory(locale, public_key, private_key, cache))
