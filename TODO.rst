@@ -4,12 +4,11 @@ Things to do
 Library Tasks
 ---------------
 
-* Enable retry on HTTP500 errors.
+* Enable retry on HTTP500 errors. (won't fix)
 * See if match.type can be parsed for more info
 * Verify that match.datetime is the end of the game in UTC
 * Add support for ladder/last
 * Add support for Favorite Race per Team player
-* Add support for grandmaster
 * Add Achievement Categories
 * Finalize support for signed requests (waiting on keys from Blizzard)
 * Add support for unranked teams (maybe)
