@@ -248,12 +248,21 @@ class SC2BnetFactory(object):
         # Fetch new data, throwing any http errors upwards
         url = "https://"+host+path+"?locale="+locale
         response = requests.get(url, headers=headers, verify=True)
-        response.raise_for_status()
-        data = response.json()
 
-        # Make sure that the API returned an ok result.
-        if data.get('status', None) == 'nok':
-            raise SC2BnetError(data)
+        try:
+            # Try getting data first because many error codes will also have json details.
+            data = response.json()
+
+            # Make sure that the API returned an ok result.
+            if data.get('status', None) == 'nok':
+                raise SC2BnetError(data)
+        except ValueError:
+            # If the response isn't json it means the API didn't render the response
+            # fall back on requests error protocols.
+            response.raise_for_status()
+
+            # If the response isn't json and we didn't have an http error code then panic
+            raise
 
         # Replace any existing cache entries
         self.cache[cache_key] = data

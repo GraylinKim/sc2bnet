@@ -12,7 +12,6 @@ import os
 os.environ['SC2BNET_CACHE_DIR'] = 'test_cache'
 os.environ['SC2BNET_CACHE_TYPES'] = 'data,profile,ladder'
 
-import requests
 import sc2bnet
 
 
@@ -27,8 +26,12 @@ class Tests(unittest.TestCase):
         profile.current_season.rankings[0].ladder.load_details()
 
     def test_invalid_bnet_id(self):
-        with self.assertRaises(requests.HTTPError):
+        try:
             sc2bnet.load_profile('us', 23589, 1, 'ShadesofGray')
+            raise Exception("Profile us-23589-1-ShadesofGray should not exist")
+        except sc2bnet.SC2BnetError as e:
+            self.assertEqual(e.code, 404)
+            self.assertEqual(e.message, 'Sc2 Profile Not Found')
 
     def test_nocache(self):
         cache = sc2bnet.NoCache()
@@ -80,7 +83,6 @@ class Tests(unittest.TestCase):
         # clean up
         shutil.rmtree('test_filecache', ignore_errors=True)
 
-    @unittest.expectedFailure
     def test_sc2bnet_error(self):
         """ This should be giving an authentication error, instead getting 500 response."""
         with self.assertRaises(sc2bnet.SC2BnetError):
