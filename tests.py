@@ -15,6 +15,7 @@ os.environ['SC2BNET_CACHE_TYPES'] = 'data,profile,ladder'
 import requests
 import sc2bnet
 
+
 class Tests(unittest.TestCase):
 
     def test_grandmaster(self):
@@ -22,6 +23,7 @@ class Tests(unittest.TestCase):
 
     def test_profile_and_ladder(self):
         profile = sc2bnet.load_profile('us', 2358439, 1, 'ShadesofGray')
+        profile.load_ladders()
         profile.current_season.rankings[0].ladder.load_details()
 
     def test_invalid_bnet_id(self):
@@ -43,7 +45,8 @@ class Tests(unittest.TestCase):
         self.assertFalse('stuff' in cache)
 
     def test_filecache(self):
-        import shutil, os
+        import os
+        import shutil
 
         # reset the file cache directory each time. FileCache must
         # require that the directory exists.
@@ -58,10 +61,10 @@ class Tests(unittest.TestCase):
 
         # KeyError should be raised for bad keys
         with self.assertRaises(KeyError):
-            value = cache[('a','b','c')]
+            value = cache[('a', 'b', 'c')]
 
         # But not for contains
-        self.assertFalse(('a','b','c') in cache)
+        self.assertFalse(('a', 'b', 'c') in cache)
 
         # Ladders should be cached with this configuration
         key = ('us.battle.net', 'en_US', '/api/sc2/ladder/150982')
@@ -83,7 +86,6 @@ class Tests(unittest.TestCase):
         with self.assertRaises(sc2bnet.SC2BnetError):
             factory = sc2bnet.SC2BnetFactory(public_key='sdlkf', private_key='sldkn')
             factory.load_profile('us', 2358439, 1, 'ShadesofGray')
-
 
     def test_script(self):
         sc2bnet.main("us --cache-path test_cache --cache-types data,ladder,profile profile 2358439 1 ShadesofGray".split())

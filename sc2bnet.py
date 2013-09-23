@@ -635,7 +635,7 @@ class TeamPlacement(object):
         #: The queue this ladder draws opponents from.
         self.ladder_queue = data['mmq']
 
-        info = self.LADDER_TYPES.get(self.ladder.queue, (None, None))
+        info = LADDER_TYPES.get(self.ladder.queue, (None, None))
 
         #: The expansion the ladder is linked to. Only available when loaded through a profile.
         self.ladder_expansion = info[0]
@@ -659,7 +659,7 @@ class TeamRanking(object):
         self.ladder.division = data['division']
         self.ladder.league = data['league']
         self.ladder.queue = data['matchMakingQueue']
-        info = self.LADDER_TYPES.get(self.ladder.queue, (None, None))
+        info = LADDER_TYPES.get(self.ladder.queue, (None, None))
         self.ladder.expansion = info[0]
         self.ladder.type = info[1]
 

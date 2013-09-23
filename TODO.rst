@@ -5,8 +5,6 @@ Library Tasks
 ---------------
 
 * Add a way to manually bypass cache on requests.
-* See if match.type can be parsed for more info
-* Add support for unranked teams (placement matches!)
 * Add some sort of logging (maybe)
 * Extract icons from compound images (maybe)
 * Count requests for throttling (maybe)
