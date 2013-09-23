@@ -19,6 +19,7 @@ Loaded resources have the following class Heirarchy::
         Seasons
             Teams
                 PlayerProfiles
+                TeamPlacement
                 TeamRankings
                     Ladder
     Ladder

@@ -47,6 +47,19 @@ DEFAULT_LOCALE_BY_HOST = {
     'eu.battle.net':'en_GB',
 }
 
+LADDER_TYPES = dict(
+    # FFA is unranked!
+    HOTS_SOLO=("HotS", '1v1'),
+    HOTS_TWOS=("HotS", '2v2'),
+    HOTS_THREES=("HotS", '3v3'),
+    HOTS_FOURS=("HotS", '4v4'),
+    SOLO=("WoL", '1v1'),
+    TWOS=("WoL", '2v2'),
+    THREES=("WoL", '3v3'),
+    FOURS=("WoL", '4v4'),
+)
+
+
 class SC2BnetError(Exception):
     """Thrown when there are errors in the Web API response."""
     def __init__(self, data):
@@ -591,8 +604,8 @@ class Team(object):
         #: The region this team is active in
         self.region = season.region
 
-        #: Info for the team's placement match progress
-        self.non_ranked = [item for item in data['nonRanked']]
+        #: A list of :class:`TeamPlacement` references for ladders the team is not yet placed into.
+        self.placements = [TeamPlacement(item, self, factory) for item in data['nonRanked']]
 
         #: A back reference to the :class:`Season` this team is a part of.
         self.season = season
@@ -610,21 +623,32 @@ class Team(object):
             self.members.append(character)
 
 
+class TeamPlacement(object):
+    """Represents a team's placement matches from the profile/ladders view."""
+    def __init__(self, data, team, factory):
+        #: The region the team placement matches are on.
+        self.region
+
+        #: A reference to the :class:`Team` the ranking is for.
+        self.team = team
+
+        #: The queue this ladder draws opponents from.
+        self.ladder_queue = data['mmq']
+
+        info = self.LADDER_TYPES.get(self.ladder.queue, (None, None))
+
+        #: The expansion the ladder is linked to. Only available when loaded through a profile.
+        self.ladder_expansion = info[0]
+
+        #: The type of teams for the ladder; 1v1, 2v2, 3v3, 4v4 (FFA is unranked).
+        self.ladder_type = info[1]
+
+        #: The number of placement matches currently completed
+        self.games_played = data['gamesPlayed']
+
+
 class TeamRanking(object):
     """Represents a team's ladder ranking from the profile/ladders view."""
-
-    # FFA is unranked!
-    LADDER_TYPES = dict(
-        HOTS_SOLO=("HotS", '1v1'),
-        HOTS_TWOS=("HotS", '2v2'),
-        HOTS_THREES=("HotS", '3v3'),
-        HOTS_FOURS=("HotS", '4v4'),
-        SOLO=("WoL", '1v1'),
-        TWOS=("WoL", '2v2'),
-        THREES=("WoL", '3v3'),
-        FOURS=("WoL", '4v4'),
-    )
-
     def __init__(self, data, team, factory, last=False):
         #: The region the team ranking is on.
         self.region = team.region
@@ -636,8 +660,8 @@ class TeamRanking(object):
         self.ladder.league = data['league']
         self.ladder.queue = data['matchMakingQueue']
         info = self.LADDER_TYPES.get(self.ladder.queue, (None, None))
-        self.expansion = info[0]
-        self.type = info[1]
+        self.ladder.expansion = info[0]
+        self.ladder.type = info[1]
 
         #: A reference to the :class:`Team` the ranking is for.
         self.team = team
