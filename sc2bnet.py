@@ -139,8 +139,6 @@ class SC2BnetFactory(object):
         """Load a new :class:`PlayerProfile` using the given options. Profiles are not cached."""
         profile = PlayerProfile(region, bnet_id, realm, name, self)
         profile.load_details()
-        profile.load_matches()
-        profile.load_ladders()
         return profile
 
     def load_ladder(self, region, ladder_id, last=False):
