@@ -4,11 +4,8 @@ Things to do
 Library Tasks
 ---------------
 
-* Implement async requests.
 * Add a way to manually bypass cache on requests.
 * See if match.type can be parsed for more info
-* Add support for ladder/last
-* Finalize support for signed requests (waiting on keys from Blizzard)
 * Add support for unranked teams (placement matches!)
 * Add some sort of logging (maybe)
 * Extract icons from compound images (maybe)
