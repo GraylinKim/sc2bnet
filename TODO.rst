@@ -4,13 +4,12 @@ Things to do
 Library Tasks
 ---------------
 
-* Enable retry on HTTP500 errors. (won't fix)
+* Implement async requests.
+* Add a way to manually bypass cache on requests.
 * See if match.type can be parsed for more info
-* Verify that match.datetime is the end of the game in UTC
 * Add support for ladder/last
-* Add support for Favorite Race per Team player
 * Finalize support for signed requests (waiting on keys from Blizzard)
-* Add support for unranked teams (maybe)
+* Add support for unranked teams (placement matches!)
 * Add some sort of logging (maybe)
 * Extract icons from compound images (maybe)
 * Count requests for throttling (maybe)

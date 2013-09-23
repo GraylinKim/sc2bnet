@@ -17,6 +17,9 @@ import sc2bnet
 
 class Tests(unittest.TestCase):
 
+    def test_grandmaster(self):
+        ladder = sc2bnet.load_ladder('kr', 'grandmaster')
+
     def test_profile_and_ladder(self):
         profile = sc2bnet.load_profile('us', 2358439, 1, 'ShadesofGray')
         profile.current_season.rankings[0].ladder.load_details()

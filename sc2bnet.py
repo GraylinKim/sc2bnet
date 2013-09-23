@@ -143,9 +143,9 @@ class SC2BnetFactory(object):
         profile.load_ladders()
         return profile
 
-    def load_ladder(self, region, ladder_id):
+    def load_ladder(self, region, ladder_id, last=False):
         """Load a new :class:`Ladder` from the given id. Ladders are not cached."""
-        ladder = Ladder(region, ladder_id)
+        ladder = Ladder(region, ladder_id, self, last=last)
         ladder.load_details()
         return ladder
 
@@ -291,6 +291,36 @@ class AchievementCategory(object):
 
         #: Category title
         self.title = data['title']
+
+
+class Icon(object):
+    """
+    Represents an icon embedded in a compound image.
+
+    TODO: Extract the actual icon, cache the compound image.
+    """
+    def __init__(self, title, data, factory):
+        #: The working title for the icon
+        self.title = title
+
+        #: The x shift on the linked compound image for the top left corner of the icon
+        self.x = data['x']
+
+        #: The y shift on the linked compound image for the top left corner of the icon
+        self.y = data['y']
+
+        #: The width of the icon
+        self.width = data['w']
+
+        #: The height of the icon
+        self.height = data['h']
+
+        #: The index of the icon in an imaginary array of icon images counting from
+        #: left to right, top to bottom on the linked compound image.
+        self.offset = data['offset']
+
+        #: The of the compound image the icon is contained in.
+        self.url = data['url']
 
 
 class Reward(object):
@@ -509,123 +539,8 @@ class PlayerProfile(object):
         """
         api_path = "/api/sc2/profile/{id}/{realm}/{name}/ladders".format(**self.__dict__)
         data = self._factory.load_data(HOST_BY_REGION[self.region], api_path)
-        self.current_season = Season(data['currentSeason'], self, self.current_season_number)
-        self.previous_season = Season(data['previousSeason'], self, self.current_season_number)
-
-
-class Season(object):
-    """Represents the ranked ladder activity for a single person in one season on one region."""
-    def __init__(self, data, profile, number):
-        #: A list of :class:`Team` references for teams this player has played on this season.
-        self.teams = list()
-
-        #: A list of :class:`LadderRanking` references for ladder rankings this season
-        self.rankings = list()
-
-        #: A backreference to the :class:`PlayerProfile` this season is for
-        self.profile = profile
-
-        #: Region this season is active on
-        self.region = profile.region
-
-        #: The season number
-        self.number = number
-
-        self._factory = profile._factory
-
-        for team_data in data:
-            if len(team_data['ladder']) == 0:
-                continue  # Don't do anything for unranked teams
-
-            team = Team(self.region, team_data['characters'], self, self._factory)
-            for ladder_data in team_data['ladder']:
-                ladder = Ladder(self.region, ladder_data['ladderId'], self._factory)
-                ladder.load_profile_data(ladder_data)
-                ladder.arranged_team = len(team.members) == int(ladder.type[0])
-                ranking = LadderRanking(self.region, ladder_data, team, ladder, self._factory)
-                self.rankings.append(ranking)
-
-
-class Ladder(object):
-    """Represents a single ladder in a single season."""
-
-    # FFA is unranked!
-    LADDER_TYPES = dict(
-        HOTS_SOLO=("HotS", '1v1'),
-        HOTS_TWOS=("HotS", '2v2'),
-        HOTS_THREES=("HotS", '3v3'),
-        HOTS_FOURS=("HotS", '4v4'),
-        SOLO=("WoL", '1v1'),
-        TWOS=("WoL", '2v2'),
-        THREES=("WoL", '3v3'),
-        FOURS=("WoL", '4v4'),
-    )
-
-    def __init__(self, region, ladder_id, factory):
-        #: The unique integer id for the ladder
-        self.id = ladder_id
-
-        #: The region the ladder is active on
-        self.region = region
-
-        #: The name of the ladder
-        self.name = str()
-
-        #: The division id of the ladder
-        self.division = int()
-
-        #: The league of the ladder: BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, MASTER, GRANDMASTER
-        self.league = str()
-
-        #: The queue this ladder draws opponents from.
-        self.queue = str()
-
-        #: The expansion the ladder is linked to. "" if it cannot be determined.
-        self.expansion = str()
-
-        #: The type of teams for the ladder; 1v1, 2v2, 3v3, 4v4 (FFA is unranked). 0v0 if can't be determined.
-        self.type = str()
-
-        #: A list of :class:`LadderRanking` on the ladder.
-        self.rankings = list()
-
-        #: A dict mapping rank -> :class:`LadderRanking`
-        self.rank = dict()
-
-        #: A boolean flag that is true of the team is arranged team.
-        #: False if the team was partially random. None if not known
-        self.arranged_team = None
-
-        self._factory = factory
-
-    def load_profile_data(self, data):
-        self.name = data['ladderName']
-        self.division = data['division']
-        self.league = data['league']
-        self.queue = data['matchMakingQueue']
-
-        info = self.LADDER_TYPES.get(self.queue, ("", "0v0"))
-        self.expansion = info[0]
-        self.type = info[1]
-
-    def load_details(self):
-        """Load additional ladder details from the Web API."""
-        api_path = "/api/sc2/ladder/{0}".format(self.id)
-        data = self._factory.load_data(HOST_BY_REGION[self.region], api_path)
-        self.rankings = list()
-        for member_data in data['ladderMembers']:
-            # Teams loaded through details will only have one player due to
-            # what seems to be a bug.
-            # TODO: Fix this once they fix the API call.
-            team = Team(self.region, [member_data['character']], None, self._factory)
-            ranking = LadderRanking(self.region, member_data, team, self, self._factory)
-            self.rankings.append(ranking)
-
-         # TODO: Is this how their sorting really works? How are ties broken?
-        self.rankings.sort(key=lambda r: r.points, reverse=True)
-        for r, ranking in enumerate(self.rankings):
-            self.rank[r+1] = ranking
-            ranking.rank = r+1
+        self.current_season = Season(data['currentSeason'], self, self.current_season_number, last=False)
+        self.previous_season = Season(data['previousSeason'], self, self.current_season_number-1, last=True)
 
 
 class Match(object):
@@ -652,20 +567,81 @@ class Match(object):
         self.end_time = datetime.fromtimestamp(data['date'])
 
 
-class LadderRanking(object):
-    """
-    Represents a ladder ranking for a team. Depending on how the ladder ranking
-    was loaded, different attributes are available.
-    """
-    def __init__(self, region, data, team, ladder, factory):
-        #: The current team rank.
-        self.rank = data.get('rank', 0)
+class Season(object):
+    """Represents the ranked ladder activity for a single person in one season on one region."""
+    def __init__(self, data, profile, number, last=False):
+        #: A backreference to the :class:`PlayerProfile` this season is for
+        self.profile = profile
 
-        #: The previous team rank. 0 if not available
-        self.previous_rank = data.get('previousRank', 0)
+        #: Region this season is active on
+        self.region = profile.region
 
-        #: The highest team rank. 0 if not available
-        self.highest_rank = data.get('highestRank', 0)
+        #: The season number
+        self.number = number
+
+        #: A list of :class:`Team` references for teams this player has played on this season.
+        self.teams = [Team(item, self, profile._factory, last=last) for item in data]
+
+        #: A list of :class:`TeamRanking` references for ladder rankings this season
+        self.rankings = sum([team.rankings for team in self.teams], [])
+
+
+class Team(object):
+    """Represents a collection of players playing on a ranked ladder in one season."""
+    def __init__(self, data, season, factory, last=False):
+        #: The region this team is active in
+        self.region = season.region
+
+        #: Info for the team's placement match progress
+        self.non_ranked = [item for item in data['nonRanked']]
+
+        #: A back reference to the :class:`Season` this team is a part of.
+        self.season = season
+
+        #: A list of :class:`PlayerProfile` references for members of the team
+        self.members = list()
+
+        #: A list of :class:`TeamRanking` references for ranks achieved by this team in this season.
+        self.rankings = [TeamRanking(item, self, factory, last=last) for item in data['ladder']]
+
+        for item in data['characters']:
+            character = PlayerProfile(self.region, item['id'], item['realm'], item['displayName'], factory)
+            character.clan_name = item['clanName']
+            character.clan_tag = item['clanTag']
+            self.members.append(character)
+
+
+class TeamRanking(object):
+    """Represents a team's ladder ranking from the profile/ladders view."""
+
+    # FFA is unranked!
+    LADDER_TYPES = dict(
+        HOTS_SOLO=("HotS", '1v1'),
+        HOTS_TWOS=("HotS", '2v2'),
+        HOTS_THREES=("HotS", '3v3'),
+        HOTS_FOURS=("HotS", '4v4'),
+        SOLO=("WoL", '1v1'),
+        TWOS=("WoL", '2v2'),
+        THREES=("WoL", '3v3'),
+        FOURS=("WoL", '4v4'),
+    )
+
+    def __init__(self, data, team, factory, last=False):
+        #: The region the team ranking is on.
+        self.region = team.region
+
+        #: A link to the corresponding :class:`Ladder`.
+        self.ladder = Ladder(self.region, data['ladderId'], factory, last=last)
+        self.ladder.name = data['ladderName']
+        self.ladder.division = data['division']
+        self.ladder.league = data['league']
+        self.ladder.queue = data['matchMakingQueue']
+        info = self.LADDER_TYPES.get(self.ladder.queue, (None, None))
+        self.expansion = info[0]
+        self.type = info[1]
+
+        #: A reference to the :class:`Team` the ranking is for.
+        self.team = team
 
         #: The current win total.
         self.wins = data['wins']
@@ -673,79 +649,115 @@ class LadderRanking(object):
         #: The current loss total.
         self.losses = data['losses']
 
-        #: The team's current point total. 0 if not available
-        self.points = data.get('points', 0)
+        #: The current rank of the team.
+        self.rank = data['rank']
 
-        #: The time the team joined the ladder. None if not available
-        self.join_time = None
-        if 'joinTimestamp' in data:
-            self.join_time = datetime.fromtimestamp(data['joinTimestamp'])
+        #: True if this ranking is showcased in the player profile.
+        self.showcase = data['showcase']
 
-        #: A reference to the :class:`Team` object that this ranking is for
-        self.team = team
-        self.team.rankings.append(self)
+
+class Ladder(object):
+    """Represents a single ladder in a single season."""
+    def __init__(self, region, ladder_id, factory, last=False):
+        #: The unique integer id for the ladder
+        self.id = ladder_id
+
+        #: The region the ladder is active on
+        self.region = region
+
+        #: The name of the ladder
+        self.name = str()
+
+        #: The division id of the ladder
+        self.division = int()
+
+        #: The league of the ladder: BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, MASTER, GRANDMASTER
+        self.league = str()
+
+        #: The queue this ladder draws opponents from. Only available when loaded through a profile.
+        self.queue = str()
+
+        #: The expansion the ladder is linked to. Only available when loaded through a profile.
+        self.expansion = None
+
+        #: The type of teams for the ladder; 1v1, 2v2, 3v3, 4v4 (FFA is unranked).
+        self.type = None
+
+        #: A list of :class:`LadderRanking` on the ladder.
+        self.rankings = list()
+
+        #: A dict mapping rank -> :class:`LadderRanking`
+        self.rank = dict()
+
+        #: A boolean flag that is true of the team is arranged team.
+        #: False if the team was partially random. None if not known
+        self.arranged_team = None
+
+        self._factory = factory
+
+    def load_details(self):
+        """Load additional ladder details from the Web API."""
+        api_path = "/api/sc2/ladder/{0}".format(self.id)
+        data = self._factory.load_data(HOST_BY_REGION[self.region], api_path)
+
+        self.rankings = [LadderRanking(item, self, self._factory) for item in data['ladderMembers']]
+
+         # TODO: Is this how their sorting really works? How are ties broken?
+        self.rankings.sort(key=lambda r: r.points, reverse=True)
+        for r, ranking in enumerate(self.rankings):
+            self.rank[r+1] = ranking
+            ranking.rank = r+1
+
+
+class LadderRanking(object):
+    """
+    Represents a ladder ranking for a team. Depending on how the ladder ranking
+    was loaded, different attributes are available.
+    """
+    def __init__(self, data, ladder, factory):
+        #: The region this ladder ranking is on.
+        self.region = ladder.region
 
         #: A reference to the :class:`Ladder` object this ranking is for.
         self.ladder = ladder
 
-        # TODO: Handle favorite teams...
-        # "favoriteRaceP1": "TERRAN",
-        # "favoriteRaceP2": "ZERG",
-        # "favoriteRaceP3": "PROTOSS"
+        item = data['character']
+        character = PlayerProfile(self.region, item['id'], item['realm'], item['displayName'], factory)
+        character.clan_name = item['clanName']
+        character.clan_tag = item['clanTag']
 
+        #: The players on the team for this ranking. Because of a bug in the WebAPI, there will only
+        #: be one player here no matter how big the team. Hopefully a future update will fix this.
+        self.players = [character]
 
-class Team(object):
-    """Represents a collection of players playing on a ranked ladder in one season."""
-    def __init__(self, region, data, season, factory):
-        #: A list of :class:`PlayerProfile` references for members of the team
-        self.members = list()
+        #: The current team rank.
+        self.rank = None
 
-        #: A list of :class:`LadderRanking` references for ranks achieved by this team in this season.
-        self.rankings = list()
+        #: The previous team rank.
+        self.previous_rank = data['previousRank']
 
-        #: A back reference to the :class:`Season` this team is a part of.
-        self.season = season
+        #: The highest team rank.
+        self.highest_rank = data['highestRank']
 
-        #: The region this team is active in
-        self.region = region
+        #: The current win total.
+        self.wins = data['wins']
 
-        self._factory = factory
+        #: The current loss total.
+        self.losses = data['losses']
 
-        for character_data in data:
-            character = PlayerProfile(self.region, character_data['id'], character_data['realm'], character_data['displayName'], self._factory)
-            character.clan_name = character_data['clanName']
-            character.clan_tag = character_data['clanTag']
-            self.members.append(character)
+        #: The team's current point total.
+        self.points = data['points']
 
+        #: The time the team joined the ladder.
+        self.join_time = datetime.fromtimestamp(data['joinTimestamp'])
 
-class Icon(object):
-    """
-    Represents an icon embedded in a compound image.
-
-    TODO: Extract the actual icon, cache the compound image.
-    """
-    def __init__(self, title, data, factory):
-        #: The working title for the icon
-        self.title = title
-
-        #: The x shift on the linked compound image for the top left corner of the icon
-        self.x = data['x']
-
-        #: The y shift on the linked compound image for the top left corner of the icon
-        self.y = data['y']
-
-        #: The width of the icon
-        self.width = data['w']
-
-        #: The height of the icon
-        self.height = data['h']
-
-        #: The index of the icon in an imaginary array of icon images counting from
-        #: left to right, top to bottom on the linked compound image.
-        self.offset = data['offset']
-
-        #: The of the compound image the icon is contained in.
-        self.url = data['url']
+        #: A list of the favored races for each player while playing in this ladder. One of TERRAN
+        #: ZERG, PROTOSS; not sure if RANDOM is a valid race here.
+        self.favorite_races = list()
+        for pid in range(1, 9):
+            key = "favoriteRaceP{0}".format(pid)
+            if key in data:
+                self.favorite_races.append(data[key])
 
 
 def main(args=None):
