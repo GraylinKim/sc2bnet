@@ -182,9 +182,9 @@ class SC2BnetFactory(object):
                 if achievement_id in self.__achievement:
                     # print("Found {0}".format(achievement_id))
                     category.featured_achievement = self.__achievement[achievement_id]
-                else:
-                    msg = "Unknown achievement id: {0} for category {1}"
-                    # print(msg.format(achievement_id, category.id))
+                elif achievement_id != 0:
+                    msg = "Unknown achievement id: {0} for category {1} [{2}]"
+                    # print(msg.format(achievement_id, category.title, category.id))
             for achievement in self.__achievement.values():
                 achievement.category = self.__category[achievement.category_id]
         return self.__achievement
