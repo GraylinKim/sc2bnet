@@ -124,6 +124,7 @@ class SC2BnetFactory(object):
 
         self.__icon = dict()
         self.__reward = dict()
+        self.__category = dict()
         self.__achievement = dict()
 
     def configure(self, preferred_locale=None, public_key=None, private_key=None, cache=None):
@@ -167,10 +168,27 @@ class SC2BnetFactory(object):
         A  dict of achivementId -> :class:`Achievement` containing all possible achievements.
         Lazy loaded and cached in the factory locale.
         """
+        def add_category(category):
+            self.__category[category.id] = category
+            for subcategory in category.subcategories:
+                add_category(subcategory)
+
         if not self.__achievement:
             data = self.load_data(self.default_host, "/api/sc2/data/achievements")
+            for item in data['categories']:
+                add_category(AchievementCategory(item, self))
             for item in data['achievements']:
                 self.__achievement[item['achievementId']] = Achievement(item, self)
+            for category in self.__category.values():
+                achievement_id = category.featured_achievement_id
+                if achievement_id in self.__achievement:
+                    # print("Found {0}".format(achievement_id))
+                    category.featured_achievement = self.__achievement[achievement_id]
+                else:
+                    msg = "Unknown achievement id: {0} for category {1}"
+                    # print(msg.format(achievement_id, category.id))
+            for achievement in self.__achievement.values():
+                achievement.category = self.__category[achievement.category_id]
         return self.__achievement
 
     @property
@@ -181,7 +199,7 @@ class SC2BnetFactory(object):
         """
         if not self.__reward:
             data = self.load_data(self.default_host, "/api/sc2/data/rewards")
-            for item in sum(data.values(),[]):
+            for item in sum(data.values(), []):
                 self.__reward[item['id']] = Reward(item, self)
         return self.__reward
 
@@ -245,11 +263,34 @@ class Achievement(object):
         #: The id of the achievement's category.
         self.category_id = data['categoryId']
 
+        #: A reference to the achievement's :class:`AchievementCategory` object
+        self.category = None
+
         #: The number of points granted by the achievement
         self.points = data['points']
 
         #: A reference to the :class:`Icon` for this achievement.
         self.icon = Icon(self.title, data['icon'], factory)
+
+
+class AchievementCategory(object):
+    """Represents a battle.net achievement category"""
+    def __init__(self, data, factory):
+        #: The category's unique id.
+        self.id = data['categoryId']
+
+        #: Categories can be nested arbitrarily deep. These are the category's subcategories
+        self.subcategories = [AchievementCategory(d, factory) for d in data.get('children', [])]
+
+        #: Categories can be represented by an icon from a featured achievement.
+        #: Categories without featured achievements have a 0 here.
+        self.featured_achievement_id = data['featuredAchievementId']
+
+        #: A reference to the featured :class:`Achievement` object if applicable
+        self.featured_achievement = None
+
+        #: Category title
+        self.title = data['title']
 
 
 class Reward(object):
@@ -452,7 +493,6 @@ class PlayerProfile(object):
         for reward_id in data['rewards']['selected']:
             reward = self._factory.reward[reward_id]
             self.rewards_selected.append(reward)
-
 
     def load_matches(self):
         """Loads recent matches into the :attr:`recent_matches` attribute."""
